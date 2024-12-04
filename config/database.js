@@ -1,23 +1,27 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false, // Required for Heroku PostgreSQL
-    },
+    ssl: isProduction
+        ? { rejectUnauthorized: false } // Enable SSL for production with relaxed checks
+        : false, // Disable SSL for development
 });
 
-// Check the database connection
-pool.connect((err) => {
-    if (err) {
-        console.error('Error connecting to the database:', err.stack);
-        process.exit(1); // Exit process if database connection fails
-    } else {
+(async () => {
+    try {
+        const client = await pool.connect();
         console.log('Database connection established successfully!');
+        client.release();
+    } catch (error) {
+        console.error('Error connecting to the database:', error.message);
+        console.error(error.stack);
+        process.exit(1); // Exit the process if the connection fails
     }
-});
+})();
 
 module.exports = {
-    query: (text, params) => pool.query(text, params), // Query helper
+    query: (text, params) => pool.query(text, params),
 };
