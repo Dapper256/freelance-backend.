@@ -1,21 +1,23 @@
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false, // Required for Heroku PostgreSQL
+    },
 });
 
-connection.connect((err) => {
+// Check the database connection
+pool.connect((err) => {
     if (err) {
-        console.error('Error connecting to the database:', err.message);
-        process.exit(1);
+        console.error('Error connecting to the database:', err.stack);
+        process.exit(1); // Exit process if database connection fails
     } else {
         console.log('Database connection established successfully!');
     }
 });
 
-module.exports = connection;
+module.exports = {
+    query: (text, params) => pool.query(text, params), // Query helper
+};
