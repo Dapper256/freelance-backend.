@@ -7,6 +7,11 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+// Root Route
+app.get('/', (req, res) => {
+  res.status(200).send('Welcome to the API!');
+});
+
 // Route to Fetch All Users
 app.get('/users', async (req, res) => {
   try {
